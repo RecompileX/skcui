@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="skcui/skcui.vcxproj" Id="6e802b8e-cc06-43e2-816b-8fc461686f39" />
+</Solution>
