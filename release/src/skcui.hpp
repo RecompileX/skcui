@@ -20,7 +20,7 @@
 inline char getKey()
 {
 #ifdef _WIN32
-    char key = _getch();
+    int key = _getch();
 
     if (key == '\r')
         return KEY_ENTER;
@@ -47,14 +47,14 @@ inline char getKey()
     char key = getchar();
 
     if (key == '\n')
-        return KEY_ENTER;
+        key = KEY_ENTER;
 
     if (key == '\033') {
         getchar(); // '['
         key = getchar();
 
-        if (key == 'A') return KEY_UP;
-        if (key == 'B') return KEY_DOWN;
+        if (key == 'A') key = KEY_UP;
+        if (key == 'B') key = KEY_DOWN;
     }
 
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
