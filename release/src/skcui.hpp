@@ -74,17 +74,17 @@ namespace skcui {
 	}
 
 	inline void menu(int& selected, const std::vector<std::string>& options, const std::optional<std::string_view> title = std::nullopt, const std::optional<std::string_view> desc = std::nullopt) {
-		if (title) {
-			std::cout << *title << std::endl << std::endl;
-
-			if (desc) {
-				std::cout << *desc << std::endl << std::endl;
-			}
-		}
 		selected = 0;
 		bool running = true;
 
-        loop:
+        loop:		
+            if (title) {
+                std::cout << *title << std::endl << std::endl;
+
+                if (desc) {
+                    std::cout << *desc << std::endl << std::endl;
+                }
+            }
             std::cout << "\033[2J\033[1;1H" << std::flush;
 
             for (int x = 0; x < options.size(); x++) {
