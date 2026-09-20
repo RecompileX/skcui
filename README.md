@@ -1,5 +1,7 @@
 # SKCUI
 
+**SKCUI** stands for **Simple Keyboard Cursor User Interface**.
+
 SKCUI is a small, header-only C++ library for interactive console menus. Version 0.1.0 provides arrow-key navigation and Enter-to-select behavior on Windows, Linux, and macOS terminal APIs.
 
 ## Requirements

@@ -1,5 +1,7 @@
 # SKCUI v0.1.0
 
+**SKCUI** stands for **Simple Keyboard Cursor User Interface**.
+
 This directory is the self-contained SKCUI v0.1.0 distribution.
 
 ## Add SKCUI to a project
