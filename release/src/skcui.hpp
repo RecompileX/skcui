@@ -78,6 +78,9 @@ namespace skcui {
 		bool running = true;
 
         loop:		
+            
+            clearScreen();            
+            
             if (title) {
                 std::cout << *title << std::endl << std::endl;
 
@@ -85,8 +88,6 @@ namespace skcui {
                     std::cout << *desc << std::endl << std::endl;
                 }
             }
-            std::cout << "\033[2J\033[1;1H" << std::flush;
-
             for (int x = 0; x < options.size(); x++) {
                 if (selected == x) {
                     std::cout << "> ";
