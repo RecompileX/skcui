@@ -1,4 +1,5 @@
 #pragma once
+
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -16,6 +17,26 @@
 #define KEY_UP    '\x01'
 #define KEY_DOWN  '\x02'
 #define KEY_ENTER '\n'
+
+namespace skcui {
+
+    class component {
+        void render();
+
+    public:
+        struct menu {
+            int& selected;
+            const std::vector<std::string>& options;
+            const std::optional<std::string> title = std::nullopt;
+            const std::optional<std::string> desc = std::nullopt;
+        };
+
+        struct checkbox {
+            bool checked = false;
+            std::vector<std::string> CheckboxName;
+        };
+    };
+};
 
 inline char getKey()
 {
@@ -49,7 +70,8 @@ inline char getKey()
     if (key == '\n')
         key = KEY_ENTER;
 
-    if (key == '\033') {
+    if (key == '\033')
+    {
         getchar(); // '['
         key = getchar();
 
@@ -66,47 +88,18 @@ inline char getKey()
 #endif
 }
 
-namespace skcui {
+inline void clearScreen()
+{
+#ifdef _WIN32
+    system("cls");
+#elif defined(__linux__) || defined(__APPLE__)
+    system("clear");
+#endif
+}
 
+template<typename T, typename... K>
+inline void runUi(T t, K... k)
+{
 
-	inline void clearScreen() {
-		std::cout << "\033[2J\033[1;1H" << std::flush;
-	}
-
-	inline void menu(int& selected, const std::vector<std::string>& options, const std::optional<std::string_view> title = std::nullopt, const std::optional<std::string_view> desc = std::nullopt) {
-		selected = 0;
-		bool running = true;
-
-        loop:		
-            
-            clearScreen();            
-            
-            if (title) {
-                std::cout << *title << std::endl << std::endl;
-
-                if (desc) {
-                    std::cout << *desc << std::endl << std::endl;
-                }
-            }
-            for (int x = 0; x < options.size(); x++) {
-                if (selected == x) {
-                    std::cout << "> ";
-                }
-
-                std::cout << options[x] << std::endl;
-            }
-            const char key = getKey();
-            if (key == KEY_UP && selected > 0) {
-                selected--;
-            }
-            else if (key == KEY_DOWN && selected < options.size() - 1) {
-                selected++;
-            }
-            else if (key == KEY_ENTER) {
-                running = false;
-            }
-            if (running == true) {
-                goto loop;
-            }
-	}
+}
 }
