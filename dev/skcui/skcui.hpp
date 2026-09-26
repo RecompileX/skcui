@@ -19,10 +19,78 @@
 #define KEY_ENTER '\n'
 
 namespace skcui {
+    class display
+    {
+    public:
+        void render(const menu& men)
+        {
+            men.selected = 0;
+            bool running = true;
 
+            loop:
+                clearScreen();
+
+            if (men.title) {
+                std::cout << men.title << std::endl << std::endl;
+
+                if (men.desc) {
+                    std::cout << men.desc << std::endl << std::endl;
+                }
+            }
+            for (int x = 0; x < men.options.size(); x++) {
+                if (men.selected == x) {
+                    std::cout << "> ";
+                }
+
+                std::cout << men.options[x] << std::endl;
+            }
+            const char key = getKey();
+            if (key == KEY_UP && men.selected > 0) {
+                men.selected--;
+            }
+            else if (key == KEY_DOWN && men.selected < men.options.size() - 1) {
+                men.selected++;
+            }
+            else if (key == KEY_ENTER) {
+                running = false;
+            }
+            if (running == true) {
+                goto loop;
+            }
+        }
+        void render(const checkbox& cb)
+        {
+            // TODO: Finish this and replace goto loop with the run ui loop.
+            cb.selected = 0;
+            bool running = true;
+
+            loop:
+                clearScreen();
+
+            for (int x = 0; x < cb.checkboxName.size(); x++) {
+                if (men.selected == x) {
+                    std::cout << "> ";
+                }
+
+                std::cout << "[ ]" << std::endl;
+            }
+            const char key = getKey();
+            if (key == KEY_UP && men.selected > 0) {
+                men.selected--;
+            }
+            else if (key == KEY_DOWN && men.selected < men.options.size() - 1) {
+                men.selected++;
+            }
+            else if (key == KEY_ENTER) {
+                running = false;
+            }
+            if (running == true) {
+                goto loop;
+            }
+        }
+        }
+    };
     class component {
-        void render();
-
     public:
         struct menu {
             int& selected;
@@ -32,8 +100,8 @@ namespace skcui {
         };
 
         struct checkbox {
-            bool checked = false;
-            std::vector<std::string> CheckboxName;
+            std::vector<bool> checked;
+            std::vector<std::string> checkboxName;
         };
     };
 };
@@ -100,6 +168,6 @@ inline void clearScreen()
 template<typename T, typename... K>
 inline void runUi(T t, K... k)
 {
-
+    if ()
 }
 }
