@@ -4,12 +4,14 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include <limits>
 #include <optional>
+#include <concepts>
+#include <type_traits>
 
 #ifdef _WIN32
 #include <conio.h>
 #else
+#include <sys/select.h>
 #include <termios.h>
 #include <unistd.h>
 #endif
@@ -17,18 +19,42 @@
 #define KEY_UP    '\x01'
 #define KEY_DOWN  '\x02'
 #define KEY_ENTER '\n'
+#define KEY_ESC '\x1b'
 
 namespace skcui {
-    class display
+    namespace component {
+        struct menu {
+            int& selected;
+            const std::vector<std::string>& options;
+            const std::optional<std::string> title = std::nullopt;
+            const std::optional<std::string> desc = std::nullopt;
+        };
+
+        struct checkbox {
+            std::vector<bool> checked;
+            std::vector<std::pair<std::string, bool>> checkboxName;
+        };
+    }
+    template<typename T, typename ... U>
+    concept either = (std::same_as<T, U> || ...);
+
+    template<typename T>
+    concept isUi = either<std::remove_cvref_t<T>, component::menu, component::checkbox>;
+    
+    template<isUi... T>
+    inline void runUi(T... t)
     {
-    public:
-        void render(const menu& men)
+        display::render(t);
+    };
+
+    namespace display{
+        void render(component::menu& men)
         {
             men.selected = 0;
             bool running = true;
 
-            loop:
-                clearScreen();
+        loop:
+            clearScreen();
 
             if (men.title) {
                 std::cout << men.title << std::endl << std::endl;
@@ -58,28 +84,29 @@ namespace skcui {
                 goto loop;
             }
         }
-        void render(const checkbox& cb)
+        void render(component::checkbox& cb)
         {
             // TODO: Finish this and replace goto loop with the run ui loop.
-            cb.selected = 0;
+            cb.checkboxName;
             bool running = true;
 
-            loop:
-                clearScreen();
+        loop:
+            clearScreen();
 
             for (int x = 0; x < cb.checkboxName.size(); x++) {
-                if (men.selected == x) {
+                if (cb.selected == x) {
                     std::cout << "> ";
                 }
 
                 std::cout << "[ ]" << std::endl;
+                std::cout << "[X]" << std::endl;
             }
             const char key = getKey();
-            if (key == KEY_UP && men.selected > 0) {
-                men.selected--;
+            if (key == KEY_UP && cb.selected > 0) {
+                cb.selected--;
             }
-            else if (key == KEY_DOWN && men.selected < men.options.size() - 1) {
-                men.selected++;
+            else if (key == KEY_DOWN && cb.selected < cb.options.size() - 1) {
+                cb.selected++;
             }
             else if (key == KEY_ENTER) {
                 running = false;
@@ -88,21 +115,6 @@ namespace skcui {
                 goto loop;
             }
         }
-        }
-    };
-    class component {
-    public:
-        struct menu {
-            int& selected;
-            const std::vector<std::string>& options;
-            const std::optional<std::string> title = std::nullopt;
-            const std::optional<std::string> desc = std::nullopt;
-        };
-
-        struct checkbox {
-            std::vector<bool> checked;
-            std::vector<std::string> checkboxName;
-        };
     };
 };
 
@@ -133,18 +145,28 @@ inline char getKey()
     newt.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
-    char key = getchar();
+    unsigned char key = 0;
+    read(STDIN_FILENO, &key, 1);
 
     if (key == '\n')
         key = KEY_ENTER;
 
-    if (key == '\033')
-    {
-        getchar(); // '['
-        key = getchar();
+    if (key == KEY_ESC) {
+        fd_set input;
+        FD_ZERO(&input);
+        FD_SET(STDIN_FILENO, &input);
 
-        if (key == 'A') key = KEY_UP;
-        if (key == 'B') key = KEY_DOWN;
+        timeval timeout{};
+        timeout.tv_usec = 30000;
+
+        if (select(STDIN_FILENO + 1, &input, nullptr, nullptr, &timeout) > 0) {
+            unsigned char sequence[2]{};
+
+            if (read(STDIN_FILENO, sequence, 2) == 2 && sequence[0] == '[') {
+                if (sequence[1] == 'A') key = KEY_UP;
+                if (sequence[1] == 'B') key = KEY_DOWN;
+            }
+        }
     }
 
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
@@ -163,11 +185,4 @@ inline void clearScreen()
 #elif defined(__linux__) || defined(__APPLE__)
     system("clear");
 #endif
-}
-
-template<typename T, typename... K>
-inline void runUi(T t, K... k)
-{
-    if ()
-}
 }
