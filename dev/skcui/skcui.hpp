@@ -7,6 +7,8 @@
 #include <optional>
 #include <concepts>
 #include <type_traits>
+#include <cstdlib>
+#include <utility>
 
 #ifdef _WIN32
 #include <conio.h>
@@ -16,12 +18,12 @@
 #include <unistd.h>
 #endif
 
-inline constexpr char KEY_UP = '\x01';
-inline constexpr char KEY_DOWN = '\x02';
-inline constexpr char KEY_ENTER = '\n';
-inline constexpr char KEY_ESC = '\x1b';
-
 namespace skcui {
+
+    inline constexpr char KEY_UP = '\x01';
+    inline constexpr char KEY_DOWN = '\x02';
+    inline constexpr char KEY_ENTER = '\n';
+    inline constexpr char KEY_ESC = '\x1b';
 
     inline char getKey();
     inline void clearScreen();
@@ -45,54 +47,54 @@ namespace skcui {
     template<typename T>
     concept isUi = either<std::remove_cvref_t<T>, component::menu, component::checkbox>;
 
-    namespace display{
+    namespace display {
         inline void render(component::menu& men)
         {
-            if(men.options.size() == 0)
+            if (men.options.empty())
                 return;
             men.selected = 0;
             bool running = true;
 
-        while (running)
-        {
-        
-            clearScreen();
+            while (running)
+            {
 
-            if (men.title) {
-                std::cout << *men.title << std::endl << std::endl;
+                clearScreen();
 
-                if (men.desc) {
-                    std::cout << *men.desc << std::endl << std::endl;
+                if (men.title) {
+                    std::cout << *men.title << std::endl << std::endl;
+
+                    if (men.desc) {
+                        std::cout << *men.desc << std::endl << std::endl;
+                    }
                 }
-            }
-            for (int x = 0; x < men.options.size(); x++) {
-                if (men.selected == x) {
-                    std::cout << "> ";
-                }
+                for (int x = 0; x < men.options.size(); x++) {
+                    if (men.selected == x) {
+                        std::cout << "> ";
+                    }
 
-                std::cout << men.options[x] << std::endl;
-            }
-            const char key = getKey();
-            if (key == KEY_UP && men.selected > 0) {
-                men.selected--;
-            }
-            else if (key == KEY_DOWN && men.selected < men.options.size() - 1) {
-                men.selected++;
-            }
-            else if (key == KEY_ENTER) {
-                running = false;
+                    std::cout << men.options[x] << std::endl;
+                }
+                const char key = getKey();
+                if (key == KEY_UP && men.selected > 0) {
+                    men.selected--;
+                }
+                else if (key == KEY_DOWN && men.selected < men.options.size() - 1) {
+                    men.selected++;
+                }
+                else if (key == KEY_ENTER) {
+                    running = false;
+                }
             }
         }
-    }
         inline void render(component::checkbox& cb)
         {
-            if(cb.checkboxName.size() == 0)
+            if (cb.checkboxName.empty())
                 return;
-            
+
             cb.selected = 0;
             bool running = true;
 
-            while(running){
+            while (running) {
                 clearScreen();
 
                 for (int x = 0; x < cb.checkboxName.size(); x++) {
@@ -121,13 +123,10 @@ namespace skcui {
                 }
             }
         }
-    };
-};
-namespace skcui {
-
+    }
     inline char getKey()
     {
-    #ifdef _WIN32
+#ifdef _WIN32
         int key = _getch();
 
         if (key == '\r')
@@ -143,7 +142,7 @@ namespace skcui {
 
         return key;
 
-    #elif defined(__linux__) || defined(__APPLE__)
+#elif defined(__linux__) || defined(__APPLE__)
         termios oldt, newt;
 
         tcgetattr(STDIN_FILENO, &oldt);
@@ -180,9 +179,9 @@ namespace skcui {
 
         return key;
 
-    #else
+#else
         return '\0';
-    #endif
+#endif
     }
     inline void clearScreen()
     {
@@ -196,5 +195,5 @@ namespace skcui {
     inline void runUi(T&... t)
     {
         (display::render(t), ...);
-    };
+    }
 }
