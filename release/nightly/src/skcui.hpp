@@ -16,10 +16,10 @@
 #include <unistd.h>
 #endif
 
-#define KEY_UP    '\x01'
-#define KEY_DOWN  '\x02'
-#define KEY_ENTER '\n'
-#define KEY_ESC '\x1b'
+inline constexpr char KEY_UP = '\x01';
+inline constexpr char KEY_DOWN = '\x02';
+inline constexpr char KEY_ENTER = '\n';
+inline constexpr char KEY_ESC = '\x1b';
 
 namespace skcui {
 
@@ -30,12 +30,11 @@ namespace skcui {
         struct menu {
             int selected;
             const std::vector<std::string>& options;
-            const std::optional<std::string> title = std::nullopt;
-            const std::optional<std::string> desc = std::nullopt;
+            const std::optional<std::string_view> title = std::nullopt;
+            const std::optional<std::string_view> desc = std::nullopt;
         };
 
         struct checkbox {
-            std::vector<bool> checked;
             std::vector<std::pair<std::string, bool>> checkboxName;
             int selected;
         };
@@ -47,12 +46,16 @@ namespace skcui {
     concept isUi = either<std::remove_cvref_t<T>, component::menu, component::checkbox>;
 
     namespace display{
-        void render(component::menu& men)
+        inline void render(component::menu& men)
         {
+            if(men.options.size() == 0)
+                return;
             men.selected = 0;
             bool running = true;
 
-        loop:
+        while (running)
+        {
+        
             clearScreen();
 
             if (men.title) {
@@ -79,44 +82,43 @@ namespace skcui {
             else if (key == KEY_ENTER) {
                 running = false;
             }
-            if (running == true) {
-                goto loop;
-            }
         }
-        void render(component::checkbox& cb)
+    }
+        inline void render(component::checkbox& cb)
         {
+            if(cb.checkboxName.size() == 0)
+                return;
+            
             cb.selected = 0;
             bool running = true;
 
-        loop:
-            clearScreen();
+            while(running){
+                clearScreen();
 
-            for (int x = 0; x < cb.checkboxName.size(); x++) {
-                if (cb.selected == x) {
-                    std::cout << "> ";
+                for (int x = 0; x < cb.checkboxName.size(); x++) {
+                    if (cb.selected == x) {
+                        std::cout << "> ";
+                    }
+                    if (cb.checkboxName[x].second) {
+                        std::cout << "[X] " << cb.checkboxName[x].first << std::endl;
+                    }
+                    else {
+                        std::cout << "[ ] " << cb.checkboxName[x].first << std::endl;
+                    }
                 }
-                if (cb.checkboxName[x].second) {
-                    std::cout << "[X] " << cb.checkboxName[x].first << std::endl;
+                const char key = getKey();
+                if (key == KEY_UP && cb.selected > 0) {
+                    cb.selected--;
                 }
-                else {
-                    std::cout << "[ ] " << cb.checkboxName[x].first << std::endl;
+                else if (key == KEY_DOWN && cb.selected < cb.checkboxName.size() - 1) {
+                    cb.selected++;
                 }
-            }
-            const char key = getKey();
-            if (key == KEY_UP && cb.selected > 0) {
-                cb.selected--;
-            }
-            else if (key == KEY_DOWN && cb.selected < cb.checkboxName.size() - 1) {
-                cb.selected++;
-            }
-            else if (key == KEY_ENTER) {
-                cb.checkboxName[cb.selected].second = !cb.checkboxName[cb.selected].second;
-            }
-            else if (key == KEY_ESC) {
-                running = false;
-            }
-            if (running == true) {
-                goto loop;
+                else if (key == KEY_ENTER) {
+                    cb.checkboxName[cb.selected].second = !cb.checkboxName[cb.selected].second;
+                }
+                else if (key == KEY_ESC) {
+                    running = false;
+                }
             }
         }
     };
