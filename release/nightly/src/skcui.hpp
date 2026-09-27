@@ -19,7 +19,7 @@
 #endif
 
 namespace skcui {
-    
+
     inline constexpr char KEY_UP = '\x01';
     inline constexpr char KEY_DOWN = '\x02';
     inline constexpr char KEY_ENTER = '\n';
@@ -30,15 +30,16 @@ namespace skcui {
 
     namespace component {
         struct menu {
-            int selected;
             const std::vector<std::string>& options;
             const std::optional<std::string_view> title = std::nullopt;
             const std::optional<std::string_view> desc = std::nullopt;
+            int selected = 0;
+
         };
 
         struct checkbox {
             std::vector<std::pair<std::string, bool>> checkboxName;
-            int selected;
+            int selected = 0;
         };
     }
     template<typename T, typename ... U>
@@ -52,7 +53,6 @@ namespace skcui {
         {
             if (men.options.empty())
                 return;
-            men.selected = 0;
             bool running = true;
 
             while (running)
@@ -90,8 +90,6 @@ namespace skcui {
         {
             if (cb.checkboxName.empty())
                 return;
-
-            cb.selected = 0;
             bool running = true;
 
             while (running) {
