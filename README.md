@@ -1,65 +1,24 @@
 # SKCUI
 
-**SKCUI** stands for **Simple Keyboard Cursor User Interface**.
+**SKCUI** stands for **Simple Keyboard Cursor User Interface**. It is a small, header-only C++ library for interactive terminal interfaces.
 
-SKCUI is a small, header-only C++ library for interactive console menus. Version 0.1.0 provides arrow-key navigation and Enter-to-select behavior on Windows, Linux, and macOS terminal APIs.
+## Choose a release channel
 
-## Requirements
+- [`release/stable`](release/stable) — tested and recommended; currently v0.1.0 and C++17.
+- [`release/nightly`](release/nightly) — current development snapshot with component-based menus and checkboxes; C++20 and subject to change.
 
-- A C++17-compatible compiler
-- A terminal that supports ANSI clear-screen escape sequences
-- Windows, Linux, or macOS for interactive keyboard input
+Each channel is self-contained with its own header, README, examples, and license. Most users should start with stable.
 
-## Quick start
+## Development
 
-Copy `release/src/skcui.hpp` into your project or add `release/src` to your compiler's include path:
-
-```cpp
-#include "skcui.hpp"
-
-#include <iostream>
-#include <string>
-#include <vector>
-
-int main() {
-    const std::vector<std::string> options{"Start", "Exit"};
-    int selected = 0;
-
-    skcui::menu(selected, options, "Main menu", "Choose an option.");
-
-    if (selected >= 0) {
-        std::cout << "Selected: " << options[static_cast<std::size_t>(selected)] << '\n';
-    }
-}
-```
-
-With an x64 Visual Studio Developer Command Prompt:
-
-```bat
-cl /nologo /std:c++17 /EHsc /W4 /I release\src release\example\example.cpp /Fe:skcui-example.exe
-```
-
-Run the executable, navigate with Up and Down, and press Enter to select.
-
-## Repository layout
-
-- `dev/` — Visual Studio development solution and project
-- `release/` — self-contained v0.1.0 distribution
-- `docs/` — API documentation, release notes, and project design records
-
-Open `dev/skcui.slnx` for Visual Studio development. The distributable is documented independently in [`release/README.md`](release/README.md).
+The working Visual Studio solution is `dev/skcui.slnx`, and the source header is `dev/skcui/skcui.hpp`. Nightly is a packaged snapshot of that development header.
 
 ## Documentation
 
-- [API reference](docs/api.md)
+- [Stable API reference](docs/api.md)
+- [Nightly API reference](release/nightly/docs/api.md)
 - [v0.1.0 release notes](docs/releases/v0.1.0.md)
 - [Changelog](CHANGELOG.md)
-
-## Current limitations
-
-- Interactive input is synchronous.
-- ANSI clear-screen sequences require a compatible terminal.
-- Linux and macOS code paths are included but were not executed as part of this Windows release build.
 
 ## License
 

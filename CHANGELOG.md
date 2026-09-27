@@ -2,7 +2,15 @@
 
 All notable changes to SKCUI are documented in this file.
 
-## [0.1.0] - 2026-09-19
+## [Unreleased]
+
+### Added
+
+- Stable and nightly release channels.
+- Nightly menu and checkbox examples.
+
+
+ - 2026-09-19
 
 ### Added
 
