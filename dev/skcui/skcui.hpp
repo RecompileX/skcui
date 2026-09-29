@@ -7,8 +7,9 @@
 #include <optional>
 #include <concepts>
 #include <type_traits>
-#include <cstdlib>
+#include <cstddef>
 #include <utility>
+#include <variant>
 
 #ifdef _WIN32
 #include <conio.h>
@@ -27,17 +28,50 @@ namespace skcui {
 
     inline char getKey();
     inline void clearScreen();
+    
+    inline std::string getln(){
+        std::string buffer;
+        std::getline(std::cin, buffer);
+        return buffer;
+    }
+
+    inline void getln(std::string& buffer) {
+        std::getline(std::cin, buffer);
+    }
 
     namespace component {
-        struct menu {
+
+        struct Text {
+            std::string text;
+        };
+
+        struct Input {
+            std::string& value;
+            std::string prompt = " - 1";
+        };
+
+        struct Separator {
+            char symbol = '-';
+            std::size_t width = 20;
+        };
+        
+        struct Container {
+            using Child = std::variant<Text, Input, Separator>;
+            std::vector<Child> addOns;
+            void add() {
+
+            }
+
+        };
+        
+        struct Menu : Container {
             const std::vector<std::string>& options;
-            const std::optional<std::string_view> title = std::nullopt;
-            const std::optional<std::string_view> desc = std::nullopt;
+            
             int selected = 0;
 
         };
 
-        struct checkbox {
+        struct checkbox : Container {
             std::vector<std::pair<std::string, bool>> checkboxName;
             int selected = 0;
         };
@@ -46,13 +80,14 @@ namespace skcui {
     concept either = (std::same_as<T, U> || ...);
 
     template<typename T>
-    concept isUi = either<std::remove_cvref_t<T>, component::menu, component::checkbox>;
+    concept isUi = either<std::remove_cvref_t<T>, component::Menu, component::checkbox>;
 
     namespace display {
-        inline void render(component::menu& men)
+        inline void render(component::Menu& menu)
         {
-            if (men.options.empty())
+            if (menu.options.empty()) {
                 return;
+            }
             bool running = true;
 
             while (running)
@@ -60,26 +95,21 @@ namespace skcui {
 
                 clearScreen();
 
-                if (men.title) {
-                    std::cout << *men.title << std::endl << std::endl;
+                for(std::size_t x = 0; x < )
 
-                    if (men.desc) {
-                        std::cout << *men.desc << std::endl << std::endl;
-                    }
-                }
-                for (int x = 0; x < men.options.size(); x++) {
-                    if (men.selected == x) {
+                for (std::size_t x = 0; x < menu.options.size() - 1; x++) {
+                    if (menu.selected == x) {
                         std::cout << "> ";
                     }
 
-                    std::cout << men.options[x] << std::endl;
+                    std::cout << menu.options[x] << std::endl;
                 }
                 const char key = getKey();
-                if (key == KEY_UP && men.selected > 0) {
-                    men.selected--;
+                if (key == KEY_UP && menu.selected > 0) {
+                    menu.selected--;
                 }
-                else if (key == KEY_DOWN && men.selected < men.options.size() - 1) {
-                    men.selected++;
+                else if (key == KEY_DOWN && menu.selected < menu.options.size() - 1) {
+                    menu.selected++;
                 }
                 else if (key == KEY_ENTER) {
                     running = false;
@@ -95,7 +125,7 @@ namespace skcui {
             while (running) {
                 clearScreen();
 
-                for (int x = 0; x < cb.checkboxName.size(); x++) {
+                for (std::size_t x = 0; x < cb.checkboxName.size(); x++) {
                     if (cb.selected == x) {
                         std::cout << "> ";
                     }
@@ -127,8 +157,9 @@ namespace skcui {
 #ifdef _WIN32
         int key = _getch();
 
-        if (key == '\r')
+        if (key == '\r') {
             return KEY_ENTER;
+        }
 
         if (key == 0 || key == 224)
         {
@@ -152,8 +183,9 @@ namespace skcui {
         unsigned char key = 0;
         read(STDIN_FILENO, &key, 1);
 
-        if (key == '\n')
+        if (key == '\n') {
             key = KEY_ENTER;
+        }
 
         if (key == KEY_ESC) {
             fd_set input;
