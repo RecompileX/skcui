@@ -57,9 +57,20 @@ namespace skcui {
         
         struct Container {
             using Child = std::variant<Text, Input, Separator>;
-            std::vector<Child> addOns;
-            void add() {
-
+            std::vector<Child> addOn;
+            
+            inline void add(Child& child) {
+                addOn.push_back(child);
+            }
+            inline void remove(int index) {
+                if (index >= 0 && index < addOn.size()) {
+                    addOn.erase(addOn.begin() + index);
+                }
+            }
+            inline void remove() {
+                if (!addOn.empty()) {
+                    addOn.pop_back();
+                }
             }
 
         };
@@ -95,13 +106,10 @@ namespace skcui {
 
                 clearScreen();
 
-                for(std::size_t x = 0; x < )
-
                 for (std::size_t x = 0; x < menu.options.size() - 1; x++) {
                     if (menu.selected == x) {
-                        std::cout << "> ";
+                           std::cout << "> ";
                     }
-
                     std::cout << menu.options[x] << std::endl;
                 }
                 const char key = getKey();
@@ -148,6 +156,9 @@ namespace skcui {
                 }
                 else if (key == KEY_ESC) {
                     running = false;
+                }
+                for (auto it : addOn) {
+                    subRender(it);
                 }
             }
         }
