@@ -54,6 +54,10 @@ namespace skcui {
             char symbol = '-';
             std::size_t width = 20;
         };
+
+        struct BlankSeparator {
+            int sepratorAmount = 1;
+        };
         
         struct Container {
             using Child = std::variant<Text, Input, Separator>;
@@ -82,7 +86,7 @@ namespace skcui {
 
         };
 
-        struct checkbox : Container {
+        struct Checkbox : Container {
             std::vector<std::pair<std::string, bool>> checkboxName;
             int selected = 0;
         };
@@ -91,9 +95,15 @@ namespace skcui {
     concept either = (std::same_as<T, U> || ...);
 
     template<typename T>
-    concept isUi = either<std::remove_cvref_t<T>, component::Menu, component::checkbox>;
-
+    concept isUi = either<std::remove_cvref_t<T>, component::Menu, component::Checkbox>;
+        
     namespace display {
+        inline void subRender(component::Text& text) {
+            std::cout << text.text << std::endl;
+        }
+        inline void subRender(component::Separator& sep) {
+            std::cout << std::endl << sep.symbol << std::endl;
+        }
         inline void render(component::Menu& menu)
         {
             if (menu.options.empty()) {
@@ -124,7 +134,7 @@ namespace skcui {
                 }
             }
         }
-        inline void render(component::checkbox& cb)
+        inline void render(component::Checkbox& cb)
         {
             if (cb.checkboxName.empty())
                 return;
