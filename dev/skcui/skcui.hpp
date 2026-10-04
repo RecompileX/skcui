@@ -1,15 +1,18 @@
 #pragma once
 
+#include <concepts>
+#include <cstddef>
+#include <cstdlib>
+#include <functional>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <string_view>
-#include <vector>
-#include <optional>
-#include <concepts>
 #include <type_traits>
-#include <cstddef>
 #include <utility>
 #include <variant>
+#include <vector>
+
 
 #ifdef _WIN32
 #include <conio.h>
@@ -42,12 +45,12 @@ namespace skcui {
     namespace component {
 
         struct Text {
-            std::string text;
+            std::string text = " ";
         };
 
         struct Input {
-            std::string& value;
-            std::string prompt = " - 1";
+            std::string value;
+            std::string prompt = "Prompt not intalized! Set to “- 1” to not render a prompt.";
         };
 
         struct Separator {
@@ -56,11 +59,11 @@ namespace skcui {
         };
 
         struct BlankSeparator {
-            int sepratorAmount = 1;
+            std::size_t sepratorAmount = 1;
         };
         
-        struct Container {
-            using Child = std::variant<Text, Input, Separator>;
+        struct Component {
+            using Child = std::variant<Text, Input, Separator, BlankSeparator>;
             std::vector<Child> addOn;
             
             inline void add(Child& child) {
@@ -76,17 +79,17 @@ namespace skcui {
                     addOn.pop_back();
                 }
             }
+            char symbol = '>';
 
         };
         
-        struct Menu : Container {
+        struct Menu : Component {
             const std::vector<std::string>& options;
-            
             int selected = 0;
 
         };
 
-        struct Checkbox : Container {
+        struct Checkbox : Component {
             std::vector<std::pair<std::string, bool>> checkboxName;
             int selected = 0;
         };
@@ -98,12 +101,21 @@ namespace skcui {
     concept isUi = either<std::remove_cvref_t<T>, component::Menu, component::Checkbox>;
         
     namespace display {
+        
         inline void subRender(component::Text& text) {
             std::cout << text.text << std::endl;
         }
         inline void subRender(component::Separator& sep) {
-            std::cout << std::endl << sep.symbol << std::endl;
+            std::cout << std::string(sep.width, sep.symbol) << std::endl;
         }
+        inline void subRender(component::BlankSeparator& blankSep) {
+            std::cout << std::string(blankSep.sepratorAmount, '\n');
+        }
+        template<isUi T>
+        inline void subRender(component::Input& input, T& t) {
+            // TODO: finish this function
+        }
+        
         inline void render(component::Menu& menu)
         {
             if (menu.options.empty()) {
@@ -116,9 +128,9 @@ namespace skcui {
 
                 clearScreen();
 
-                for (std::size_t x = 0; x < menu.options.size() - 1; x++) {
+                for (std::size_t x = 0; x < menu.options.size(); x++) {
                     if (menu.selected == x) {
-                           std::cout << "> ";
+                           std::cout << menu.symbol << ' ';
                     }
                     std::cout << menu.options[x] << std::endl;
                 }
@@ -131,6 +143,20 @@ namespace skcui {
                 }
                 else if (key == KEY_ENTER) {
                     running = false;
+                }
+                for (std::size_t x = 0; x < menu.addOn.size(); x++) {
+                    std::visit([&menu](auto& child) {
+                        using Child = std::remove_cvref_t<decltype(child)>;
+                        if constexpr (std::is_same_v<Child, component::Input>) {
+                            subRender(child, menu);
+                        }
+                        else {
+                            subRender(child);
+                        }
+
+                        },
+                        menu.addOn[x]
+                    );
                 }
             }
         }
@@ -145,7 +171,7 @@ namespace skcui {
 
                 for (std::size_t x = 0; x < cb.checkboxName.size(); x++) {
                     if (cb.selected == x) {
-                        std::cout << "> ";
+                        std::cout << cb.symbol << ' ';
                     }
                     if (cb.checkboxName[x].second) {
                         std::cout << "[X] " << cb.checkboxName[x].first << std::endl;
@@ -167,8 +193,18 @@ namespace skcui {
                 else if (key == KEY_ESC) {
                     running = false;
                 }
-                for (auto it : addOn) {
-                    subRender(it);
+                for (std::size_t x = 0; x < cb.addOn.size(); x++) {
+                    std::visit([&cb](auto& child) {
+                        using Child = std::remove_cvref_t<decltype(child)>;
+                        if constexpr (std::is_same_v<Child, component::Input>) {
+                            subRender(child, cb);
+                        }
+                        else {
+                            subRender(child);
+                        }
+
+                        }, cb.addOn[x]
+                    );
                 }
             }
         }
