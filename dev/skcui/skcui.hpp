@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <concepts>
 #include <cstddef>
 #include <cstdlib>
@@ -30,16 +31,28 @@ namespace skcui {
     inline constexpr char KEY_ESC = '\x1b';
 
     inline char getKey();
-    inline void clearScreen();
-    
-    inline std::string getln(){
-        std::string buffer;
-        std::getline(std::cin, buffer);
-        return buffer;
-    }
+    inline void clearScreen() {
+#ifdef _WIN32
+        system("cls");
+#else
+        system("clear");
+#endif
+    };
 
-    inline void getln(std::string& buffer) {
-        std::getline(std::cin, buffer);
+    inline std::string progressBar(float progress, float min,float max, std::optional<char> symbol, std::optional<int> width) {
+        std::string result = "{";
+        if (!symbol)
+            symbol = '*';
+        if (!width)
+            width = 10;
+
+        float x = (progress - min) / (max - min);
+        int amount = x * *width;
+        for (std::size_t y = 0; y < amount; y++) {
+            result.push_back(*symbol);
+        }
+        result.push_back('}');
+        return result;
     }
 
     namespace component {
@@ -50,7 +63,7 @@ namespace skcui {
 
         struct Input {
             std::string value;
-            std::string prompt = "Prompt not intalized! Set to “- 1” to not render a prompt.";
+            std::string prompt = "Prompt not initialized! Set to “- 1” to not render a prompt.";
         };
 
         struct Separator {
@@ -59,14 +72,20 @@ namespace skcui {
         };
 
         struct BlankSeparator {
-            std::size_t sepratorAmount = 1;
+            std::size_t separatorAmount = 1;
+        };
+
+        struct ProgressBar {
+            char symbol = '*';
+            float progress = 0, min = 0, max = 0;
+            std::size_t width = 20;
         };
         
         struct Component {
-            using Child = std::variant<Text, Input, Separator, BlankSeparator>;
+            using Child = std::variant<Text, Input, Separator, BlankSeparator, ProgressBar>;
             std::vector<Child> addOn;
             
-            inline void add(Child& child) {
+            inline void add(const Child& child) {
                 addOn.push_back(child);
             }
             inline void remove(int index) {
@@ -109,11 +128,36 @@ namespace skcui {
             std::cout << std::string(sep.width, sep.symbol) << std::endl;
         }
         inline void subRender(component::BlankSeparator& blankSep) {
-            std::cout << std::string(blankSep.sepratorAmount, '\n');
+            std::cout << std::string(blankSep.separatorAmount, '\n');
         }
-        template<isUi T>
-        inline void subRender(component::Input& input, T& t) {
-            // TODO: finish this function
+        inline void subRender(component::Input& input, component::Menu& menu, std::size_t x, char key) {
+            if (input.prompt != "- 1") {
+                std::cout << input.prompt;
+            }
+            if (x == menu.selected) {
+                if (key == KEY_ENTER) {
+                    return;
+                }
+                if (key == '\b') {
+                    if (!input.value.empty()) {
+                        input.value.pop_back();
+                    }
+                }
+                else if (key != KEY_ESC) {
+                    input.value += key;
+                }
+            }
+                std::cout << menu.symbol << ' ';
+                std::cout << input.value << std::endl;
+        }
+        inline void subRender(component::ProgressBar& pb) {
+            float x = (pb.progress - pb.min) / (pb.max - pb.min);
+            int amount = x * pb.width;
+            std::cout << '{';
+            for (std::size_t y = 0; y < amount; y++) {
+                std::cout << pb.symbol;
+            }
+            std::cout << '}';
         }
         
         inline void render(component::Menu& menu)
@@ -122,6 +166,16 @@ namespace skcui {
                 return;
             }
             bool running = true;
+            std::size_t inputAddonAmount = 0;
+
+            for (std::size_t x = 0; x < menu.addOn.size(); x++) {
+                std::visit([&inputAddonAmount](auto& child) {
+                    using Child = std::remove_cvref_t<decltype(child)>;
+                    if constexpr (std::is_same_v<Child, component::Input>) {
+                        inputAddonAmount++;
+                    }
+                }, menu.addOn[x]);
+            }
 
             while (running)
             {
@@ -138,23 +192,25 @@ namespace skcui {
                 if (key == KEY_UP && menu.selected > 0) {
                     menu.selected--;
                 }
-                else if (key == KEY_DOWN && menu.selected < menu.options.size() - 1) {
+                else if (key == KEY_DOWN && menu.selected < menu.options.size() + inputAddonAmount - 1) {
                     menu.selected++;
                 }
-                else if (key == KEY_ENTER) {
+                else if (key == KEY_ENTER && menu.selected < menu.options.size()) {
                     running = false;
                 }
+                std::size_t y = 0;
                 for (std::size_t x = 0; x < menu.addOn.size(); x++) {
-                    std::visit([&menu](auto& child) {
+                    std::visit([&menu, &y](auto& child) {
                         using Child = std::remove_cvref_t<decltype(child)>;
                         if constexpr (std::is_same_v<Child, component::Input>) {
-                            subRender(child, menu);
+                            subRender(child, menu, y, key);
+                            y++;
                         }
                         else {
                             subRender(child);
                         }
 
-                        },
+                    },
                         menu.addOn[x]
                     );
                 }
@@ -203,8 +259,7 @@ namespace skcui {
                             subRender(child);
                         }
 
-                        }, cb.addOn[x]
-                    );
+                    }, cb.addOn[x]);
                 }
             }
         }
@@ -218,6 +273,14 @@ namespace skcui {
             return KEY_ENTER;
         }
 
+        if (key == 8) {
+            return '\b';
+        }
+
+        if (key == 27) {
+            return KEY_ESC;
+        }
+
         if (key == 0 || key == 224)
         {
             key = _getch();
@@ -226,7 +289,7 @@ namespace skcui {
             if (key == 80) return KEY_DOWN;
         }
 
-        return key;
+        return static_cast<char>(key);
 
 #elif defined(__linux__) || defined(__APPLE__)
         termios oldt, newt;
@@ -240,8 +303,12 @@ namespace skcui {
         unsigned char key = 0;
         read(STDIN_FILENO, &key, 1);
 
-        if (key == '\n') {
+        if (key == '\n' || key == '\r') {
             key = KEY_ENTER;
+        }
+
+        if (key == 127 || key == 8) {
+            key = '\b';
         }
 
         if (key == KEY_ESC) {
@@ -252,10 +319,13 @@ namespace skcui {
             timeval timeout{};
             timeout.tv_usec = 30000;
 
-            if (select(STDIN_FILENO + 1, &input, nullptr, nullptr, &timeout) > 0) {
+            if (select(STDIN_FILENO + 1, &input, nullptr, nullptr, &timeout) > 0)
+            {
                 unsigned char sequence[2]{};
 
-                if (read(STDIN_FILENO, sequence, 2) == 2 && sequence[0] == '[') {
+                if (read(STDIN_FILENO, sequence, 2) == 2 &&
+                    sequence[0] == '[')
+                {
                     if (sequence[1] == 'A') key = KEY_UP;
                     if (sequence[1] == 'B') key = KEY_DOWN;
                 }
@@ -264,23 +334,10 @@ namespace skcui {
 
         tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
-        return key;
+        return static_cast<char>(key);
 
 #else
         return '\0';
 #endif
-    }
-    inline void clearScreen()
-    {
-#ifdef _WIN32
-        system("cls");
-#elif defined(__linux__) || defined(__APPLE__)
-        system("clear");
-#endif
-    }
-    template<isUi... T>
-    inline void runUi(T&... t)
-    {
-        (display::render(t), ...);
     }
 }
