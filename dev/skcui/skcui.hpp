@@ -45,7 +45,6 @@ namespace skcui {
             symbol = '*';
         if (!width)
             width = 10;
-
         float x = (progress - min) / (max - min);
         int amount = x * *width;
         for (std::size_t y = 0; y < amount; y++) {
@@ -146,9 +145,29 @@ namespace skcui {
                 else if (key != KEY_ESC) {
                     input.value += key;
                 }
-            }
                 std::cout << menu.symbol << ' ';
+            }
                 std::cout << input.value << std::endl;
+        }
+        inline void subRender(component::Input& input, component::Checkbox& cb, std::size_t x, char key) {
+            if (input.prompt != "- 1") {
+                std::cout << input.prompt;
+            }
+            if (x == cb.selected) {
+                if (key == KEY_ENTER) {
+                    return;
+                }
+                if (key == '\b') {
+                    if (!input.value.empty()) {
+                        input.value.pop_back();
+                    }
+                }
+                else if (key != KEY_ESC) {
+                    input.value += key;
+                }
+            }
+            std::cout << cb.symbol << ' ';
+            std::cout << input.value << std::endl;
         }
         inline void subRender(component::ProgressBar& pb) {
             float x = (pb.progress - pb.min) / (pb.max - pb.min);
@@ -179,16 +198,14 @@ namespace skcui {
 
             while (running)
             {
-
+                const char key = getKey();
                 clearScreen();
-
                 for (std::size_t x = 0; x < menu.options.size(); x++) {
                     if (menu.selected == x) {
                            std::cout << menu.symbol << ' ';
                     }
                     std::cout << menu.options[x] << std::endl;
                 }
-                const char key = getKey();
                 if (key == KEY_UP && menu.selected > 0) {
                     menu.selected--;
                 }
@@ -200,10 +217,10 @@ namespace skcui {
                 }
                 std::size_t y = 0;
                 for (std::size_t x = 0; x < menu.addOn.size(); x++) {
-                    std::visit([&menu, &y](auto& child) {
+                    std::visit([&menu, &y, &key](auto& child) {
                         using Child = std::remove_cvref_t<decltype(child)>;
                         if constexpr (std::is_same_v<Child, component::Input>) {
-                            subRender(child, menu, y, key);
+                            subRender(child, menu, menu.options.size() + y, key);
                             y++;
                         }
                         else {
@@ -221,10 +238,20 @@ namespace skcui {
             if (cb.checkboxName.empty())
                 return;
             bool running = true;
+            std::size_t inputAddonAmount = 0;
+
+            for (std::size_t x = 0; x < cb.addOn.size(); x++) {
+                std::visit([&inputAddonAmount](auto& child) {
+                    using Child = std::remove_cvref_t<decltype(child)>;
+                    if constexpr (std::is_same_v<Child, component::Input>) {
+                        inputAddonAmount++;
+                    }
+                }, cb.addOn[x]);
+            }
 
             while (running) {
+                const char key = getKey();
                 clearScreen();
-
                 for (std::size_t x = 0; x < cb.checkboxName.size(); x++) {
                     if (cb.selected == x) {
                         std::cout << cb.symbol << ' ';
@@ -236,30 +263,33 @@ namespace skcui {
                         std::cout << "[ ] " << cb.checkboxName[x].first << std::endl;
                     }
                 }
-                const char key = getKey();
-                if (key == KEY_UP && cb.selected > 0) {
+                    if (key == KEY_UP && cb.selected > 0) {
                     cb.selected--;
                 }
-                else if (key == KEY_DOWN && cb.selected < cb.checkboxName.size() - 1) {
+                else if (key == KEY_DOWN && cb.selected < cb.checkboxName.size() + inputAddonAmount - 1) {
                     cb.selected++;
                 }
-                else if (key == KEY_ENTER) {
+                else if (key == KEY_ENTER && cb.selected < cb.checkboxName.size()) {
                     cb.checkboxName[cb.selected].second = !cb.checkboxName[cb.selected].second;
                 }
                 else if (key == KEY_ESC) {
                     running = false;
                 }
+                std::size_t y = 0;
                 for (std::size_t x = 0; x < cb.addOn.size(); x++) {
-                    std::visit([&cb](auto& child) {
+                    std::visit([&cb, &y, &key](auto& child) {
                         using Child = std::remove_cvref_t<decltype(child)>;
                         if constexpr (std::is_same_v<Child, component::Input>) {
-                            subRender(child, cb);
+                            subRender(child, cb, cb.checkboxName.size() + y, key);
+                            y++;
                         }
                         else {
                             subRender(child);
                         }
 
-                    }, cb.addOn[x]);
+                    },
+                        cb.addOn[x]
+                    );
                 }
             }
         }
