@@ -7,6 +7,7 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdlib>
+#include <initializer_list>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -229,7 +230,7 @@ namespace skcui {
                 if (key == KEY_UP && menu.selected > 0) {
                     menu.selected--;
                 }
-                else if (key == KEY_DOWN && menu.selected < static_cast<int>(menu.options.size() + inputAddonAmount - 1)) {
+                else if (key == KEY_DOWN && menu.selected < static_cast<int>(menu.options.size() + inputAddonAmount) - 1) {
                     menu.selected++;
                 }
                 else if (key == KEY_ENTER && menu.selected < menu.options.size()) {
@@ -293,7 +294,7 @@ namespace skcui {
                 if (key == KEY_UP && cb.selected > 0) {
                     cb.selected--;
                 }
-                else if (key == KEY_DOWN && cb.selected < static_cast<int>(cb.checkboxName.size() + inputAddonAmount - 1)) {
+                else if (key == KEY_DOWN && cb.selected < static_cast<int>(cb.checkboxName.size() + inputAddonAmount) - 1) {
                     cb.selected++;
                 }
                 else if (key == KEY_ENTER && cb.selected < cb.checkboxName.size()) {

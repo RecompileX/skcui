@@ -1,17 +1,53 @@
+# IDE Configuration
+.idea/
 .vs/
-x64/
-**/x64/
 *.vcxproj.user
 *.suo
-*.VC.db
-*.ipch
-*.obj
+
+# Build Directories
+x64/
+build/
+cmake-build-*/
+CMakeFiles/
+
+# Development Builds
 /dev/**/Debug/
 /dev/**/Release/
+
+# Compiler Output
+*.obj
+*.o
 *.exe
+*.out
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+
+# Debug Symbols & Files
 *.pdb
 *.ilk
 *.idb
+*.ipch
 *.tlog
 *.lastbuildstate
 
+# Visual Studio Cache
+*.VC.db
+*.VC.opendb
+*.VC.db-shm
+*.VC.db-wal
+
+# CMake Generated Files
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Makefile
+
+# Temporary Files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
