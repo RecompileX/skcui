@@ -237,8 +237,8 @@ namespace skcui {
                     [&inputAddonAmount](auto& child) {
                         using Child = std::remove_cvref_t<decltype(child)>;
                         if constexpr (std::is_same_v<Child, component::Input>) {
-                            ++;
-                        }inputAddonAmount
+                            inputAddonAmount++;
+                        }
                     },
                     menu.addOn[x]);
             }
