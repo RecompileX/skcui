@@ -37,9 +37,9 @@ int main() {
 
     skcui::display::render(menu);
 
-    if (menu.selected >= 0 &&
-        menu.selected < static_cast<int>(menu.options.size())) {
-        std::cout << "Highlighted: " << menu.options[menu.selected] << '\n';
+    if (menu.getSelected() >= 0 &&
+        menu.getSelected() < static_cast<int>(menu.options.size())) {
+        std::cout << "Highlighted: " << menu.options[menu.getSelected()] << '\n';
     }
 }
 ```
