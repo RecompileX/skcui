@@ -55,8 +55,8 @@ namespace skcui {
     }
 
     inline std::string progressBar(float progress, float min, float max,
-        std::optional<char> symbol,
-        std::optional<int> width) {
+        std::optional<char> symbol = std::nullopt,
+        std::optional<std::size_t> width = std::nullopt) {
         if (min == max) {
             return "{}";
         }
@@ -66,11 +66,15 @@ namespace skcui {
         if (!width)
             width = 10;
         float x = std::clamp((progress - min) / (max - min), 0.0f, 1.0f);
+        if (x != x)
+        {
+            return "{}";
+        }
         std::size_t amount = std::round(x * *width);
         for (std::size_t y = 0; y < amount; y++) {
             result.push_back(*symbol);
         }
-        for (int y = 0; y < *width - amount; y++) {
+        for (std::size_t y = 0; y < *width - amount; y++) {
             result.push_back(' ');
         }
         result.push_back('}');
@@ -111,7 +115,7 @@ namespace skcui {
 
             inline void add(const Child& child) { addOn.push_back(child); }
             inline void remove(std::size_t index) {
-                if (index >= 0 && index < addOn.size()) {
+                if (index < addOn.size()) {
                     addOn.erase(addOn.begin() + index);
                 }
             }
@@ -124,7 +128,7 @@ namespace skcui {
         };
 
         struct Menu : Component {
-            const std::vector<std::string> options;
+            std::vector<std::string> options;
             std::size_t getSelected() { return selected; };
 
             Menu(std::vector<std::string> opts) : options(std::move(opts)) {}
@@ -155,7 +159,7 @@ namespace skcui {
         either<std::remove_cvref_t<T>, component::Menu, component::Checkbox>;
 
     namespace display {
-
+    
         inline void subRender(component::Text& text) {
             std::cout << text.text << std::endl;
         }
@@ -207,12 +211,16 @@ namespace skcui {
                 return;
             }
             float x = std::clamp((pb.progress - pb.min) / (pb.max - pb.min), 0.0f, 1.0f);
-            int amount = std::round(x * pb.width);
+            if (x != x)
+            {
+                return;
+            }
+            std::size_t amount = std::round(x * pb.width);
             std::cout << '{';
             for (std::size_t y = 0; y < amount; y++) {
                 std::cout << pb.symbol;
             }
-            for (int y = 0; y < pb.width - amount; y++) {
+            for (std::size_t y = 0; y < pb.width - amount; y++) {
                 std::cout << ' ';
             }
             std::cout << '}' << std::endl;
@@ -229,8 +237,8 @@ namespace skcui {
                     [&inputAddonAmount](auto& child) {
                         using Child = std::remove_cvref_t<decltype(child)>;
                         if constexpr (std::is_same_v<Child, component::Input>) {
-                            inputAddonAmount++;
-                        }
+                            ++;
+                        }inputAddonAmount
                     },
                     menu.addOn[x]);
             }
@@ -251,9 +259,8 @@ namespace skcui {
                     menu.selected--;
                 }
                 else if (key == KEY_DOWN &&
-                    menu.selected <
-                    static_cast<int>(menu.options.size() + inputAddonAmount) -
-                    1) {
+                    menu.options.size() + inputAddonAmount > 0 &&
+                    menu.selected < menu.options.size() + inputAddonAmount - 1){
                     menu.selected++;
                 }
                 else if (key == KEY_ENTER && menu.selected < menu.options.size()) {
@@ -318,9 +325,8 @@ namespace skcui {
                     cb.selected--;
                 }
                 else if (key == KEY_DOWN &&
-                    cb.selected <
-                    static_cast<int>(cb.checkboxName.size() + inputAddonAmount) -
-                    1) {
+                    cb.checkboxName.size() + inputAddonAmount > 0 &&
+                    cb.selected < cb.checkboxName.size() + inputAddonAmount - 1){
                     cb.selected++;
                 }
                 else if (key == KEY_ENTER && cb.selected < cb.checkboxName.size()) {
