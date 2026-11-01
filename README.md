@@ -1,5 +1,7 @@
 # SKCUI — Simple Keyboard Console UI
 
+![Stars](https://img.shields.io/github/stars/RecompileX/skcui?style=social) ![CI](https://github.com/RecompileX/skcui/actions/workflows/ci.yml/badge.svg) ![Latest Tag](https://img.shields.io/github/v/tag/RecompileX/skcui?label=latest%20tag&sort=semver)
+
 ![SKCUI console UI demo](assets/skcui-demo.gif)
 
 A small, header-only C++ library for keyboard-driven console menus, checkboxes, text input, and progress bars.
