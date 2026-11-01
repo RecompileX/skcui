@@ -1,0 +1,89 @@
+
+name: SKCUI CI
+
+on:
+  push:
+    paths:
+      - 'release/stable/**'
+      - 'release/stable 1.x/**'
+      - '.github/workflows/ci.yml'
+
+  pull_request:
+    paths:
+      - 'release/stable/**'
+      - 'release/stable 1.x/**'
+      - '.github/workflows/ci.yml'
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: ${{ matrix.compiler }} - ${{ matrix.version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+        version: [stable, stable-1x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gcc g++ clang
+
+      - name: Select release directory
+        id: release
+        run: |
+          if [ "${{ matrix.version }}" = "stable" ]; then
+            echo 'source=release/stable/examples' >> "$GITHUB_OUTPUT"
+          else
+            echo 'source=release/stable 1.x/examples' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure
+        run: |
+          if [ "${{ matrix.compiler }}" = "gcc" ]; then
+            export CC=gcc
+            export CXX=g++
+          else
+            export CC=clang
+            export CXX=clang++
+          fi
+
+          cmake -S "${{ steps.release.outputs.source }}" \
+                -B build \
+                -G Ninja \
+                -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compile examples
+        run: cmake --build build --parallel
+
+      - name: Run example and check stdout
+        run: |
+          if [ ! -x build/skcui ]; then
+            echo "ERROR: Example executable not found: build/skcui"
+            exit 1
+          fi
+
+          echo "Running SKCUI example..."
+
+          if ! timeout 15s ./build/skcui > output.txt; then
+            echo "ERROR: Example failed or timed out."
+            exit 1
+          fi
+
+          echo "Example stdout:"
+          cat output.txt
+
+          if [ ! -s output.txt ]; then
+            echo "ERROR: Example produced no stdout."
+            exit 1
+          fi
+
+          echo "SUCCESS: Example produced stdout."
