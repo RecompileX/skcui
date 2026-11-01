@@ -39,6 +39,7 @@ jobs:
 
       - name: Select release directory
         id: release
+        shell: bash
         run: |
           if [ "${{ matrix.version }}" = "stable" ]; then
             echo 'source=release/stable/examples' >> "$GITHUB_OUTPUT"
@@ -47,6 +48,7 @@ jobs:
           fi
 
       - name: Configure
+        shell: bash
         run: |
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
             export CC=gcc
@@ -64,26 +66,49 @@ jobs:
       - name: Compile examples
         run: cmake --build build --parallel
 
-      - name: Run example and check stdout
+      - name: Verify executable
         run: |
           if [ ! -x build/skcui ]; then
-            echo "ERROR: Example executable not found: build/skcui"
+            echo "::error::SKCUI executable not found or not executable."
             exit 1
           fi
 
+          echo "Executable verified."
+
+      - name: Run example
+        shell: bash
+        run: |
           echo "Running SKCUI example..."
 
-          if ! timeout 15s ./build/skcui > output.txt; then
-            echo "ERROR: Example failed or timed out."
-            exit 1
-          fi
+          set +e
+          timeout --signal=TERM --kill-after=2s 15s \
+            ./build/skcui > output.txt 2>&1
+          status=$?
+          set -e
 
-          echo "Example stdout:"
+          echo "Exit code: $status"
+          echo "Example output:"
           cat output.txt
 
-          if [ ! -s output.txt ]; then
-            echo "ERROR: Example produced no stdout."
+          if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
+            echo "::error::SKCUI example timed out."
+            exit 1
+          elif [ "$status" -ne 0 ]; then
+            echo "::error::SKCUI example exited with code $status."
             exit 1
           fi
 
-          echo "SUCCESS: Example produced stdout."
+          if [ ! -s output.txt ]; then
+            echo "::error::SKCUI example produced no output."
+            exit 1
+          fi
+
+          echo "Example executed successfully."
+
+      - name: Upload example output
+        if: always() && hashFiles('output.txt') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: skcui-output-${{ matrix.compiler }}-${{ matrix.version }}
+          path: output.txt
+          if-no-files-found: ignore
