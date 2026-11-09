@@ -43,7 +43,7 @@ jobs:
           if [ "${{ matrix.version }}" = "stable" ]; then
             echo 'source=release/stable/examples' >> "$GITHUB_OUTPUT"
           else
-            echo 'source=release/stable 1.x/examples' >> "$GITHUB_OUTPUT"
+            echo 'source=release/stable-1.x/examples' >> "$GITHUB_OUTPUT"
           fi
 
       - name: Configure
