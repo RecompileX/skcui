@@ -4,13 +4,13 @@ on:
   push:
     paths:
       - 'release/stable/**'
-      - 'release/stable 1.x/**'
+      - 'release/stable-1.x/**'
       - '.github/workflows/ci.yml'
 
   pull_request:
     paths:
       - 'release/stable/**'
-      - 'release/stable 1.x/**'
+      - 'release/stable-1.x/**'
       - '.github/workflows/ci.yml'
 
   workflow_dispatch:
