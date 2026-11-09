@@ -1,3 +1,7 @@
+/* SKCUI - Simple Keyboard Console UI
+Copyright (c) 2026 RecompileX
+Licensed under the MIT License.
+See https://github.com/RecompileX/skcui/blob/main/LICENSE for full licence text. */
 #pragma once
 
 #include <cstdio>

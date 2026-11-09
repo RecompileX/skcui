@@ -20,7 +20,7 @@ A small, header-only C++ library for keyboard-driven console menus, checkboxes, 
 | Package | API | C++ standard |
 | --- | --- | --- |
 | [Stable](release/stable/README.md) | `component::Menu`, `component::Checkbox`, and composable add-ons | C++20+; bundled CMake example uses C++23 |
-| [Stable 1.x](release/stable%201.x/README.md) | `skcui::menu` and `skcui::checkbox` functions | C++17+ |
+| [Stable 1.x](release/stable-1.x/README.md) | `skcui::menu` and `skcui::checkbox` functions | C++17+ |
 
 Both packages include their own header, example, setup guide, and license. Development takes place in `dev/skcui.hpp`.
 
@@ -68,7 +68,7 @@ cmake --build build/stable --config Release
 For the C++17 package:
 
 ```bat
-cl /nologo /std:c++17 /EHsc /W4 /I "release\stable 1.x\src" "release\stable 1.x\examples\full-example.cpp" /Fe:skcui-1x-example.exe
+cl /nologo /std:c++17 /EHsc /W4 /I "release\stable-1.x\src" "release\stable-1.x\examples\full-example.cpp" /Fe:skcui-1x-example.exe
 ```
 
 ## Repository layout
@@ -85,8 +85,8 @@ See the [release index](release/README.md) for package details.
 
 - [Current API reference](docs/api.md)
 - [Stable setup guide](release/stable/README.md)
-- [Stable 1.x setup guide](release/stable%201.x/README.md)
-- [Stable 1.x API reference](release/stable%201.x/docs/api.md)
+- [Stable 1.x setup guide](release/stable-1.x/README.md)
+- [Stable 1.x API reference](release/stable-1.x/docs/api.md)
 
 ## License
 
